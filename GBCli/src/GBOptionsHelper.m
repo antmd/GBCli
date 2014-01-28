@@ -116,10 +116,10 @@
 	
 	// First add header row. Note that first element is the setting.
 	NSMutableArray *headers = [NSMutableArray arrayWithObject:@"Option"];
-	[lengths addObject:[NSNumber numberWithUnsignedInteger:[headers.lastObject length]]];
+	[lengths addObject:@([headers.lastObject length])];
 	[settings enumerateSettings:^(GBSettings *settings, BOOL *stop) {
 		[headers addObject:settings.name];
-		[lengths addObject:[NSNumber numberWithUnsignedInteger:settings.name.length]];
+		[lengths addObject:@(settings.name.length)];
 		settingsHierarchyLevels++;
 	}];
 	[rows addObject:headers];
@@ -135,8 +135,8 @@
 				[rows removeLastObject];
 				[rows removeLastObject];
 			}
-			NSArray *separators = [NSArray arrayWithObject:definition.description];
-			[rows addObject:[NSArray array]];
+			NSArray *separators = @[definition.description];
+			[rows addObject:@[]];
 			[rows addObject:separators];
 			lastSeparatorIndex = rows.count;
 			return;
@@ -152,7 +152,7 @@
 		[settings enumerateSettings:^(GBSettings *settings, BOOL *stop) {
 			NSString *columnData = @"";
 			if ([settings isKeyPresentAtThisLevel:longOption]) {
-				id value = [settings objectForKey:longOption];
+				id value = settings[longOption];
 				if ([settings isKeyArray:longOption]) {
 					NSMutableString *arrayValue = [NSMutableString string];
 					[(NSArray *)value enumerateObjectsUsingBlock:^(NSString *obj, NSUInteger idx, BOOL *stop) {
@@ -202,7 +202,7 @@
 	[rows enumerateObjectsUsingBlock:^(NSArray *columns, NSUInteger rowIdx, BOOL *stopRow) {
 		NSMutableString *output = [NSMutableString string];
 		[columns enumerateObjectsUsingBlock:^(NSString *value, NSUInteger colIdx, BOOL *stopCol) {
-			NSUInteger columnSize = [[lengths objectAtIndex:colIdx] unsignedIntegerValue];
+			NSUInteger columnSize = [lengths[colIdx] unsignedIntegerValue];
 			NSUInteger valueSize = value.length;
 			[output appendString:value];
 			while (valueSize <= columnSize) {
@@ -240,8 +240,8 @@
 				[rows removeLastObject];
 				[rows removeLastObject];
 			}
-			[rows addObject:[NSArray array]];
-			[rows addObject:[NSArray arrayWithObject:definition.description]];
+			[rows addObject:@[]];
+			[rows addObject:@[definition.description]];
 			lastSeparatorIndex = rows.count;
 			return;
 		}

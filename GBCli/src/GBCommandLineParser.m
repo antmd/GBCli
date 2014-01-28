@@ -59,21 +59,21 @@ const struct GBCommandLineKeys {
 - (void)registerOption:(NSString *)longOption shortcut:(char)shortOption requirement:(GBValueRequirements)requirement {
 	// Register option data.
 	NSMutableDictionary *data = [NSMutableDictionary dictionary];
-	[data setObject:longOption forKey:GBCommandLineKeys.longOption];
-	[data setObject:[NSNumber numberWithUnsignedInteger:requirement] forKey:GBCommandLineKeys.requirement];
+	data[GBCommandLineKeys.longOption] = longOption;
+	data[GBCommandLineKeys.requirement] = @(requirement);
 	if (shortOption > 0) {
-		[data setObject:[NSNumber numberWithInt:shortOption] forKey:GBCommandLineKeys.shortOption];
-		[self.registeredOptionsByShortNames setObject:data forKey:[NSString stringWithFormat:@"%c", shortOption]];
+		data[GBCommandLineKeys.shortOption] = [NSNumber numberWithInt:shortOption];
+		(self.registeredOptionsByShortNames)[[NSString stringWithFormat:@"%c", shortOption]] = data;
 	}
-	[self.registeredOptionsByLongNames setObject:data forKey:longOption];
+	(self.registeredOptionsByLongNames)[longOption] = data;
 
 	// If this is a swich, register negative form (i.e. if the option is named --option, negative form is --no-option). Note that negative form doesn't use short code!
 	if (requirement == GBValueNone) {		
 		NSMutableDictionary *negData = [NSMutableDictionary dictionary];
 		NSString *negLongOption = [NSString stringWithFormat:@"no-%@", longOption];
-		[negData setObject:negLongOption forKey:GBCommandLineKeys.longOption];
-		[negData setObject:[NSNumber numberWithUnsignedInteger:requirement] forKey:GBCommandLineKeys.requirement];
-		[self.registeredOptionsByLongNames setObject:data forKey:negLongOption];
+		negData[GBCommandLineKeys.longOption] = negLongOption;
+		negData[GBCommandLineKeys.requirement] = @(requirement);
+		(self.registeredOptionsByLongNames)[negLongOption] = data;
 	}
 }
 
@@ -101,10 +101,10 @@ const struct GBCommandLineKeys {
 
 - (BOOL)parseOptionsWithArguments:(char **)argv count:(int)argc block:(GBCommandLineParseBlock)handler {
 	if (argc == 0) return YES;
-	NSString *command = [NSString stringWithUTF8String:argv[0]];
+	NSString *command = @(argv[0]);
 	NSMutableArray *arguments = [NSMutableArray arrayWithCapacity:argc - 1];
 	for (int i=1; i<argc; i++) {
-		NSString *argument = [NSString stringWithUTF8String:argv[i]];
+		NSString *argument = @(argv[i]);
 		[arguments addObject:argument];
 	}
 	return [self parseOptionsWithArguments:arguments commandLine:command block:handler];
@@ -122,7 +122,7 @@ const struct GBCommandLineKeys {
 	NSUInteger index = 0;
 	while (index < arguments.count) {
 		id value = nil;
-		NSString *input = [arguments objectAtIndex:index];
+		NSString *input = arguments[index];
 		NSDictionary *data = [self optionDataForOption:input value:&value];
 		if (data == GBCommandLineKeys.notAnOption) break; // no more options, only arguments left...
 		
@@ -136,13 +136,13 @@ const struct GBCommandLineKeys {
 			result = NO;
 		} else {
 			// Prepare the value or notify about problem with it.
-			GBValueRequirements requirement = [[data objectForKey:GBCommandLineKeys.requirement] unsignedIntegerValue];
+			GBValueRequirements requirement = [data[GBCommandLineKeys.requirement] unsignedIntegerValue];
 			switch (requirement) {
 				case GBValueRequired:
 					// Option requires value: check next option and if it "looks like" an option (i.e. starts with -- or -), notify about missing value. Also notify about missing value if this is the last option. If we already have the value (via --name=value syntax), no need to search.
 					if (!value) {
 						if (index < arguments.count - 1) {
-							value = [arguments objectAtIndex:index + 1];
+							value = arguments[index + 1];
 							if ([self isShortOrLongOptionName:value]) {
 								flags = GBParseFlagMissingValue;
 							} else {
@@ -157,7 +157,7 @@ const struct GBCommandLineKeys {
 					// Options can have optional value: check next option and if it "looks like" a value (i.e. doens't start with -- or -), use it. Otherwie assume YES (the same if there's no more option). If we already have the value (via --name=value syntax), no need to search.
 					if (!value) {
 						if (index < arguments.count - 1) {
-							value = [arguments objectAtIndex:index + 1];
+							value = arguments[index + 1];
 							if ([self isShortOrLongOptionName:value]) {
 								value = [NSNumber numberWithInt:YES];
 							} else {
@@ -175,14 +175,14 @@ const struct GBCommandLineKeys {
 							BOOL cmdLineValue = [value boolValue];
 							value = [NSNumber numberWithBool:!cmdLineValue];
 						} else {
-							value = [NSNumber numberWithBool:NO];
+							value = @NO;
 						}
 					} else {
 						if (value) {
 							BOOL cmdLineValue = [value boolValue];
-							value = [NSNumber numberWithBool:cmdLineValue];
+							value = @(cmdLineValue);
 						} else {
-							value = [NSNumber numberWithBool:YES];
+							value = @YES;
 						}
 					}
 					break;
@@ -194,13 +194,13 @@ const struct GBCommandLineKeys {
 		if (stop) return NO;
 		
 		// Remember parsed option and continue with next one.
-		if (value) [self.parsedOptions setObject:value forKey:name];
+		if (value) (self.parsedOptions)[name] = value;
 		index++;
 	}
 	
 	// Prepare arguments (arguments are command line options after options).
 	while (index < arguments.count) {
-		NSString *input = [arguments objectAtIndex:index];
+		NSString *input = arguments[index];
 		[self.parsedArguments addObject:input];
 		handler(GBParseFlagArgument, nil, input, &stop);
 		if (stop) return NO;
@@ -233,7 +233,7 @@ const struct GBCommandLineKeys {
 		if (value) *value = [name substringFromIndex:valueRange.location + 1];
 		name = [name substringToIndex:valueRange.location];
 	}
-	return [options objectForKey:name];
+	return options[name];
 }
 
 - (BOOL)isShortOrLongOptionName:(NSString *)value {
@@ -245,7 +245,7 @@ const struct GBCommandLineKeys {
 #pragma mark - Getting parsed results
 
 - (id)valueForOption:(NSString *)longOption {
-	return [self.parsedOptions objectForKey:longOption];
+	return (self.parsedOptions)[longOption];
 }
 
 - (NSArray *)arguments {

@@ -63,7 +63,7 @@ static NSString * const GBSettingsArgumentsKey = @"B450A340-EC4F-40EC-B18D-B52DB
 	[self.storage removeAllObjects];
 	[values enumerateKeysAndObjectsUsingBlock:^(NSString *key, id result, BOOL *stop) {
 		while ([key hasPrefix:@"-"]) key = [key substringFromIndex:1];
-		[self setObject:result forKey:key];
+		self[key] = result;
 	}];
 	return YES;
 }
@@ -93,7 +93,7 @@ static NSString * const GBSettingsArgumentsKey = @"B450A340-EC4F-40EC-B18D-B52DB
 }
 - (void)setObject:(id)value forKey:(NSString *)key {
 	if ([self isKeyArray:key] && ![key isKindOfClass:[NSArray class]]) {
-		NSMutableArray *array = [self.storage objectForKey:key];
+		NSMutableArray *array = (self.storage)[key];
 		if (![array isKindOfClass:[NSMutableArray class]]) {
 			id existing = array;
 			array = [NSMutableArray array];
@@ -111,47 +111,47 @@ static NSString * const GBSettingsArgumentsKey = @"B450A340-EC4F-40EC-B18D-B52DB
 // Keyed subscripting
 -(id)objectForKeyedSubscript:(id)key
 {
-    return [self objectForKey:key];
+    return [ self objectForKey:key ];
 }
 - (void)setObject:(id)obj forKeyedSubscript:(id)key
 {
-    [ self setObject:obj forKey:key];
+    [ self setObject:obj forKey:key ];
 }
 
 - (BOOL)boolForKey:(NSString *)key {
-	NSNumber *number = [self objectForKey:key];
+	NSNumber *number = self[key];
 	return [number boolValue];
 }
 - (void)setBool:(BOOL)value forKey:(NSString *)key {
-	NSNumber *number = [NSNumber numberWithBool:value];
-	[self setObject:number forKey:key];
+	NSNumber *number = @(value);
+	self[key] = number;
 }
 
 - (NSInteger)integerForKey:(NSString *)key {
-	NSNumber *number = [self objectForKey:key];
+	NSNumber *number = self[key];
 	return [number integerValue];
 }
 - (void)setInteger:(NSInteger)value forKey:(NSString *)key {
-	NSNumber *number = [NSNumber numberWithInteger:value];
-	[self setObject:number forKey:key];
+	NSNumber *number = @(value);
+	self[key] = number;
 }
 
 - (NSUInteger)unsignedIntegerForKey:(NSString *)key {
-	NSNumber *number = [self objectForKey:key];
+	NSNumber *number = self[key];
 	return (NSUInteger)[number integerValue];
 }
 - (void)setUnsignedInteger:(NSUInteger)value forKey:(NSString *)key {
-	NSNumber *number = [NSNumber numberWithUnsignedInteger:value];
-	[self setObject:number forKey:key];
+	NSNumber *number = @(value);
+	self[key] = number;
 }
 
 - (CGFloat)floatForKey:(NSString *)key {
-	NSNumber *number = [self objectForKey:key];
+	NSNumber *number = self[key];
 	return [number doubleValue];
 }
 - (void)setFloat:(CGFloat)value forKey:(NSString *)key {
-	NSNumber *number = [NSNumber numberWithDouble:value];
-	[self setObject:number forKey:key];
+	NSNumber *number = @(value);
+	self[key] = number;
 }
 
 
@@ -159,7 +159,7 @@ static NSString * const GBSettingsArgumentsKey = @"B450A340-EC4F-40EC-B18D-B52DB
 #pragma mark - Arguments handling
 
 - (void)addArgument:(NSString *)argument {
-	[self setObject:argument forKey:GBSettingsArgumentsKey];
+	self[GBSettingsArgumentsKey] = argument;
 }
 
 - (GBSettings *)settingsForArgument:(NSString *)argument {
@@ -175,10 +175,10 @@ GB_SYNTHESIZE_OBJECT(NSArray *, arguments, setArguments, GBSettingsArgumentsKey)
 }
 
 - (id)objectForLocalKey:(NSString *)key {
-	return [self.storage objectForKey:key];
+	return (self.storage)[key];
 }
 - (void)setObject:(id)value forLocalKey:(NSString *)key {
-	[self.storage setObject:value forKey:key];
+	(self.storage)[key] = value;
 }
 
 #pragma mark - Introspection
@@ -217,7 +217,7 @@ GB_SYNTHESIZE_OBJECT(NSArray *, arguments, setArguments, GBSettingsArgumentsKey)
 }
 
 - (BOOL)isKeyPresentAtThisLevel:(NSString *)key {
-	if ([self.storage objectForKey:key]) return YES;
+	if ((self.storage)[key]) return YES;
 	return NO;
 }
 

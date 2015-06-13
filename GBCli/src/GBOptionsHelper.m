@@ -103,11 +103,11 @@
 
 - (void)printValuesFromSettings:(GBSettings *)settings {	
 #define GB_UPDATE_MAX_LENGTH(value) \
-	NSNumber *length = [lengths objectAtIndex:columns.count]; \
+	{NSNumber *length = [lengths objectAtIndex:columns.count]; \
 	NSUInteger maxLength = MAX(value.length, length.unsignedIntegerValue); \
 	if (maxLength > length.unsignedIntegerValue) { \
 	NSNumber *newMaxLength = [NSNumber numberWithUnsignedInteger:maxLength]; \
-	[lengths replaceObjectAtIndex:columns.count withObject:newMaxLength]; \
+	[lengths replaceObjectAtIndex:columns.count withObject:newMaxLength];} \
 }
 	NSMutableArray *rows = [NSMutableArray array];
 	NSMutableArray *lengths = [NSMutableArray array];
@@ -117,9 +117,9 @@
 	// First add header row. Note that first element is the setting.
 	NSMutableArray *headers = [NSMutableArray arrayWithObject:@"Option"];
 	[lengths addObject:@([headers.lastObject length])];
-	[settings enumerateSettings:^(GBSettings *settings, BOOL *stop) {
-		[headers addObject:settings.name];
-		[lengths addObject:@(settings.name.length)];
+	[settings enumerateSettings:^(GBSettings *theSettings, BOOL *stop) {
+		[headers addObject:theSettings.name];
+		[lengths addObject:@(theSettings.name.length)];
 		settingsHierarchyLevels++;
 	}];
 	[rows addObject:headers];
@@ -149,15 +149,15 @@
 		[columns addObject:longOption];
 		
 		// Now append value for the option on each settings level and update maximum size.
-		[settings enumerateSettings:^(GBSettings *settings, BOOL *stop) {
+		[settings enumerateSettings:^(GBSettings *theSettings, BOOL *stop3) {
 			NSString *columnData = @"";
-			if ([settings isKeyPresentAtThisLevel:longOption]) {
-				id value = settings[longOption];
-				if ([settings isKeyArray:longOption]) {
+			if ([theSettings isKeyPresentAtThisLevel:longOption]) {
+				id value = theSettings[longOption];
+				if ([theSettings isKeyArray:longOption]) {
 					NSMutableString *arrayValue = [NSMutableString string];
-					[(NSArray *)value enumerateObjectsUsingBlock:^(NSString *obj, NSUInteger idx, BOOL *stop) {
-						GBSettings *level = [settings settingsForArrayValue:obj key:longOption];
-						if (level != settings) return;
+					[(NSArray *)value enumerateObjectsUsingBlock:^(NSString *obj, NSUInteger idx, BOOL *stop2) {
+						GBSettings *level = [theSettings settingsForArrayValue:obj key:longOption];
+						if (level != theSettings) return;
 						if (arrayValue.length > 0) [arrayValue appendString:@", "];
 						[arrayValue appendString:obj];
 					}];
@@ -281,7 +281,7 @@
 	// Render all rows aligning long option columns properly.
 	[rows enumerateObjectsUsingBlock:^(NSArray *columns, NSUInteger rowIdx, BOOL *stop) {
 		NSMutableString *output = [NSMutableString string];
-		[columns enumerateObjectsUsingBlock:^(NSString *column, NSUInteger colIdx, BOOL *stop) {
+		[columns enumerateObjectsUsingBlock:^(NSString *column, NSUInteger colIdx, BOOL *stop2) {
 			[output appendFormat:@"%@ ", column];
 			if (colIdx == 1) {
 				NSUInteger length = column.length;

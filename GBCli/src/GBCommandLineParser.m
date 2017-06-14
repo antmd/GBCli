@@ -102,7 +102,7 @@ const struct GBCommandLineKeys {
 - (BOOL)parseOptionsWithArguments:(char **)argv count:(int)argc block:(GBCommandLineParseBlock)handler {
 	if (argc == 0) return YES;
 	NSString *command = @(argv[0]);
-	NSMutableArray *arguments = [NSMutableArray arrayWithCapacity:argc - 1];
+	NSMutableArray *arguments = [NSMutableArray arrayWithCapacity:(NSUInteger)(argc - 1)];
 	for (int i=1; i<argc; i++) {
 		NSString *argument = @(argv[i]);
 		[arguments addObject:argument];
